@@ -8,7 +8,7 @@ from flask_appbuilder.security.registerviews import RegisterUserDBView
 from flask_appbuilder.security.sqla.manager import SecurityManager
 from flask_babel import lazy_gettext 
 from app import app
-from flask import g, url_for, redirect
+from flask import g
 from flask_appbuilder import BaseView,IndexView, expose
 import fdb
 import datetime
@@ -65,7 +65,7 @@ class SalonView(ModelView):
 
 class SesionView(ModelView):
     datamodel = SQLAInterface(Sesion)
-    add_columns=['ID_Sesion','Curso','Salon','Horario']
+    add_columns=['ID_Sesion','Curso','Salon','Horario','activada']
 
 class HorarioView(ModelView):
     datamodel = SQLAInterface(Horario)
@@ -120,8 +120,26 @@ appbuilder.add_view(
 
 @app.route("/curso")
 def curso():
+    #SQL STATEMENT
     con = fdb.connect(database='C:/Users/germa/Desktop/Universidad/2021-3/Bases de datos/final/project/DB.FDB', user='sysdba', password='masterkey')
     cur = con.cursor()
-    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion" FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
+    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
+    #User Role
+    user = g.user
+    roles = [str(i) for i in user.roles]
+
+    return render_template("curso.html", id = request.args.get("id"), roles = roles,sesiones=cur.fetchall(),base_template=appbuilder.base_template, appbuilder=appbuilder)
+
+@app.route("/activate")
+def activate():
+    con = fdb.connect(database='C:/Users/germa/Desktop/Universidad/2021-3/Bases de datos/final/project/DB.FDB', user='sysdba', password='masterkey')
+    cur = con.cursor()
+    #Update info
+    cur.execute(f'UPDATE "Sesion" SET ACTIVADA = 1 WHERE "ID_Sesion" = {request.args.get("id")};')
+
+    #Ask for all the sessions
+    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
+    user = g.user
+    roles = [str(i) for i in user.roles]
+    return render_template("curso.html", id = request.args.get("id_curso"), roles = roles,sesiones=cur.fetchall(),base_template=appbuilder.base_template, appbuilder=appbuilder)
     
-    return render_template("curso.html", id = request.args.get("id"), sesiones=cur.fetchall(),base_template=appbuilder.base_template, appbuilder=appbuilder)

@@ -1,22 +1,33 @@
 {% extends "appbuilder/baselayout.html" %}
 {% block content %}
 <div class="jumbotron">
+  <a href="/">Back</a>
   <div class="container">
     <h1>Curso {{id}}</h1>
   </div>
-  <a href="/">Back</a>
   {% if sesiones|length > 0 %}
     <ul>
       {% for cur in sesiones%}
         <li>
-          <h4>ID Sesión{{cur[-1]}}</h4>
+          <h4>ID Sesión{{cur[-2]}}</h4>
           <p>Hora inicio: {{cur[0]}}</p>
           <p>Hora Fin: {{cur[1]}}</p>
           <p>Fecha: {{cur[2]}}</p>
           <form action="/curso" method='get'>
-            <input type="hidden" name="id" value={{cur[-1]}}>
+            <input type="hidden" name="id" value={{cur[-2]}}>
+            <input type="hidden" name="id_curso" value={{id}}>
             <input type="submit" value="Entrar">
           </form>
+          {% if 'Docente' in roles %}
+            <form action="/activate" method='get'>
+              <input type="hidden" name="id" value={{cur[-2]}}>
+              <input type="hidden" name="id_curso" value={{id}}>
+              <input type="submit" value="Activar">
+            </form>
+          {% endif %}
+          {% if cur[-1] != 0 %}
+            <p>Activada</p>
+          {%endif%}
         </li>
       {% endfor %}
     </ul>

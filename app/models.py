@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer,Date ,String, ForeignKey, DateTime, Uniqu
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.expression import null
 from sqlalchemy.sql.schema import Sequence
-from sqlalchemy.sql.sqltypes import Date
+from sqlalchemy.sql.sqltypes import Boolean, Date
 
 class Departamento(Model):
     __tablename__ = 'Departamento'
@@ -140,6 +140,7 @@ class Sesion(Model):
     Salon = relationship("Salon")
     ID_Horario = Column(Integer, ForeignKey("Horario.ID_Horario"), nullable=False)
     Horario = relationship("Horario")
+    activada = Column(Boolean)
 
     def __str__(self):
         return str(self.ID_Sesion)

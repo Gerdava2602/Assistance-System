@@ -4,7 +4,7 @@ from flask import Flask
 from flask.templating import render_template
 from flask_appbuilder import AppBuilder, SQLA
 from flask_appbuilder import BaseView,IndexView, expose
-from flask import Flask, g, redirect, url_for
+from flask import Flask, g
 import fdb
 import os
 """
@@ -25,7 +25,8 @@ class newIndexView(IndexView):
             con = fdb.connect(database='C:/Users/germa/Desktop/Universidad/2021-3/Bases de datos/final/project/DB.FDB', user='sysdba', password='masterkey')
             cur = con.cursor()
             if 'Estudiante' in roles:
-                return render_template("cursos.html", rol='Estudiante', base_template=appbuilder.base_template, appbuilder=appbuilder)
+                cur.execute(f'SELECT "Curso"."ID_Curso","Curso".NOMBRE FROM "Estudiante" JOIN "Alumno" ON "Estudiante"."ID_Estudiante" = "Alumno"."ID_Estudiante" JOIN "Curso" ON "Curso"."ID_Curso" = "Alumno"."ID_Curso" WHERE "Estudiante".EMAIL = \'{str(user.email)}\'')
+                return render_template("cursos.html", rol='Estudiante',cursos=cur.fetchall() ,base_template=appbuilder.base_template, appbuilder=appbuilder)
             elif 'Docente' in roles:
                 cur.execute(f'SELECT "Curso"."ID_Curso", "Curso".NOMBRE FROM "Docente" JOIN "Curso" ON "Curso"."ID_Docente" = "Docente"."ID_Docente" WHERE "Docente".EMAIL = \'{str(user.email)}\';')
                 
