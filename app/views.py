@@ -2,8 +2,15 @@ from .models import *
 from flask import render_template
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from flask_appbuilder import ModelView, ModelRestApi
-
+from flask_babel import lazy_gettext 
 from . import appbuilder, db
+from flask_appbuilder.security.registerviews import RegisterUserDBView
+from flask_appbuilder.security.sqla.manager import SecurityManager
+from flask_babel import lazy_gettext 
+from app import app
+from flask import g, url_for, redirect
+from flask_appbuilder import BaseView,IndexView, expose
+
 
 class DepartamentoView(ModelView):
     datamodel = SQLAInterface(Departamento)

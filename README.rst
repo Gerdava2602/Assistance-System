@@ -1,4 +1,4 @@
-We used Flask-AppBuilder to create the base skeleton of the app
+Base Skeleton to start your application using Flask-AppBuilder
 --------------------------------------------------------------
 
 - Install it::
