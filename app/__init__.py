@@ -5,6 +5,8 @@ from flask.templating import render_template
 from flask_appbuilder import AppBuilder, SQLA
 from flask_appbuilder import BaseView,IndexView, expose
 from flask import Flask, g, redirect, url_for
+import fdb
+import os
 """
  Logging configuration
 """
@@ -20,10 +22,14 @@ class newIndexView(IndexView):
              return render_template("welcome.html", base_template=appbuilder.base_template, appbuilder=appbuilder)
         else:
             roles = [str(i) for i in user.roles]
+            con = fdb.connect(database='C:/Users/germa/Desktop/Universidad/2021-3/Bases de datos/final/project/DB.FDB', user='sysdba', password='masterkey')
+            cur = con.cursor()
             if 'Estudiante' in roles:
                 return render_template("cursos.html", rol='Estudiante', base_template=appbuilder.base_template, appbuilder=appbuilder)
             elif 'Docente' in roles:
-                return render_template("cursos.html", rol='Docente', base_template=appbuilder.base_template, appbuilder=appbuilder)
+                cur.execute(f'SELECT "Curso"."ID_Curso", "Curso".NOMBRE FROM "Docente" JOIN "Curso" ON "Curso"."ID_Docente" = "Docente"."ID_Docente" WHERE "Docente".EMAIL = \'{str(user.email)}\';')
+                
+                return render_template("cursos.html", rol='Docente',cursos=cur.fetchall(), base_template=appbuilder.base_template, appbuilder=appbuilder)
             elif 'Admin' in roles:
                 return render_template("cursos.html", rol='Admin', base_template=appbuilder.base_template, appbuilder=appbuilder)
 

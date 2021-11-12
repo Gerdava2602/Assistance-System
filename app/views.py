@@ -1,5 +1,5 @@
 from .models import *
-from flask import render_template
+from flask import render_template,request
 from flask_appbuilder.models.sqla.interface import SQLAInterface
 from flask_appbuilder import ModelView, ModelRestApi
 from flask_babel import lazy_gettext 
@@ -18,7 +18,7 @@ class DepartamentoView(ModelView):
 
 class DocenteView(ModelView):
     datamodel = SQLAInterface(Docente)
-    add_columns=['ID_Docente','nombre','apellido', 'Departamento']
+    add_columns=['ID_Docente','nombre','apellido','email', 'Departamento']
 
 class AsignaturaView(ModelView):
     datamodel = SQLAInterface(Asignatura)
@@ -114,3 +114,7 @@ appbuilder.add_view(
 appbuilder.add_view(
     HorarioView, "Horarios", icon="fa-folder-open-o", category="Universidad"
 )
+
+@app.route("/curso")
+def curso():
+    return render_template("curso.html", id = request.args.get("id"), base_template=appbuilder.base_template, appbuilder=appbuilder)

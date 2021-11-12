@@ -3,6 +3,17 @@
 <div class="jumbotron">
   <div class="container">
     <h1>{{rol}}</h1>
+    {% if cursos|length > 0 %}
+      {% for cur in cursos%}
+        <h4>{{cur[1]}}</h4>
+        <form action="/curso" method='get'>
+          <input type="hidden" name="id" value={{cur[0]}}>
+          <input type="submit" value="submit">
+        </form>
+      {% endfor %}
+    {% else %}
+        <p>Parece que no tiene cursos asociados</p>
+    {%endif%}
   </div>
 </div>
 {% endblock %}
