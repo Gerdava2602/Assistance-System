@@ -10,7 +10,10 @@ from flask_babel import lazy_gettext
 from app import app
 from flask import g, url_for, redirect
 from flask_appbuilder import BaseView,IndexView, expose
-
+import fdb
+import datetime
+import qrcode
+from PIL import Image
 
 class DepartamentoView(ModelView):
     datamodel = SQLAInterface(Departamento)
@@ -62,11 +65,11 @@ class SalonView(ModelView):
 
 class SesionView(ModelView):
     datamodel = SQLAInterface(Sesion)
-    add_columns=['ID_Sesion','Curso','Salon']
+    add_columns=['ID_Sesion','Curso','Salon','Horario']
 
 class HorarioView(ModelView):
     datamodel = SQLAInterface(Horario)
-    add_columns=['Sesion','Hora_Inicio','Hora_Fin','fecha']
+    add_columns=['ID_Horario','Hora_Inicio','Hora_Fin','fecha']
     
 
 appbuilder.add_view(
@@ -117,4 +120,8 @@ appbuilder.add_view(
 
 @app.route("/curso")
 def curso():
-    return render_template("curso.html", id = request.args.get("id"), base_template=appbuilder.base_template, appbuilder=appbuilder)
+    con = fdb.connect(database='C:/Users/germa/Desktop/Universidad/2021-3/Bases de datos/final/project/DB.FDB', user='sysdba', password='masterkey')
+    cur = con.cursor()
+    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion" FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
+    
+    return render_template("curso.html", id = request.args.get("id"), sesiones=cur.fetchall(),base_template=appbuilder.base_template, appbuilder=appbuilder)

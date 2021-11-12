@@ -117,7 +117,20 @@ class Salon(Model):
     modalidad = Column(String(60), nullable=False)
     ID_Salon = Column(Integer, primary_key=True, nullable=False)
 
+    def __str__(self):
+        return str(self.ID_Salon)
+
 #
+class Horario(Model):
+    __tablename__ = 'Horario'
+    ID_Horario = Column(Integer,nullable=False,primary_key=True)
+    Hora_Inicio = Column(DateTime, nullable=False)
+    Hora_Fin = Column(DateTime, nullable=False)
+    fecha = Column(Date, nullable=False)
+
+    def __str__(self):
+        return str(self.ID_Horario)
+
 class Sesion(Model):
     __tablename__ = 'Sesion'
     ID_Sesion = Column(Integer,primary_key=True,nullable=True)
@@ -125,15 +138,11 @@ class Sesion(Model):
     Curso = relationship("Curso")
     ID_Salon = Column(Integer, ForeignKey("Salon.ID_Salon"), nullable=False)
     Salon = relationship("Salon")
+    ID_Horario = Column(Integer, ForeignKey("Horario.ID_Horario"), nullable=False)
+    Horario = relationship("Horario")
 
-#
-class Horario(Model):
-    __tablename__ = 'Horario'
-    ID_Sesion = Column(Integer, ForeignKey("Sesion.ID_Sesion"), nullable=False, primary_key=True)
-    Sesion = relationship("Sesion")
-    Hora_Inicio = Column(DateTime, nullable=False)
-    Hora_Fin = Column(DateTime, nullable=False)
-    fecha = Column(Date, nullable=False)
+    def __str__(self):
+        return str(self.ID_Sesion)
 
 class Asistencia(Model):
     __tablename__ = 'Asistencia'
@@ -142,3 +151,6 @@ class Asistencia(Model):
     ID_Estudiante = Column(Integer, ForeignKey("Estudiante.ID_Estudiante"), nullable=False)
     Estudiante = relationship("Estudiante")
     estado = Column(String(60), nullable=False)
+
+    def __str__(self):
+        return str(self.ID_Sesion)

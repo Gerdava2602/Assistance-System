@@ -2,7 +2,26 @@
 {% block content %}
 <div class="jumbotron">
   <div class="container">
-    <h1>{{id}}</h1>
+    <h1>Curso {{id}}</h1>
   </div>
+  <a href="/">Back</a>
+  {% if sesiones|length > 0 %}
+    <ul>
+      {% for cur in sesiones%}
+        <li>
+          <h4>ID Sesión{{cur[-1]}}</h4>
+          <p>Hora inicio: {{cur[0]}}</p>
+          <p>Hora Fin: {{cur[1]}}</p>
+          <p>Fecha: {{cur[2]}}</p>
+          <form action="/curso" method='get'>
+            <input type="hidden" name="id" value={{cur[-1]}}>
+            <input type="submit" value="Entrar">
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+    {%else%}
+    <p>Parece que no hay sesiones disponibles</p>
+    {% endif %}
 </div>
 {% endblock %}
