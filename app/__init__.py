@@ -4,7 +4,7 @@ from flask import Flask
 from flask.templating import render_template
 from flask_appbuilder import AppBuilder, SQLA
 from flask_appbuilder import BaseView,IndexView, expose
-from flask import Flask, g
+from flask import Flask, g, request
 import fdb
 import os
 """
@@ -24,15 +24,20 @@ class newIndexView(IndexView):
             roles = [str(i) for i in user.roles]
             con = fdb.connect(database='C:/Users/germa/Desktop/Universidad/2021-3/Bases de datos/final/project/DB.FDB', user='sysdba', password='masterkey')
             cur = con.cursor()
+            cur.execute(f'SELECT "ID_Periodo" FROM "Periodo"')
+            periodos=[i[0] for i in cur.fetchall()]
+
             if 'Estudiante' in roles:
                 cur.execute(f'SELECT "Curso"."ID_Curso","Curso".NOMBRE FROM "Estudiante" JOIN "Alumno" ON "Estudiante"."ID_Estudiante" = "Alumno"."ID_Estudiante" JOIN "Curso" ON "Curso"."ID_Curso" = "Alumno"."ID_Curso" WHERE "Estudiante".EMAIL = \'{str(user.email)}\'')
-                return render_template("cursos.html", rol='Estudiante',cursos=cur.fetchall() ,base_template=appbuilder.base_template, appbuilder=appbuilder)
+                if request.args.get("periodo","") != "":
+                    cur.execute(f'SELECT "Curso"."ID_Curso","Curso".NOMBRE FROM "Estudiante" JOIN "Alumno" ON "Estudiante"."ID_Estudiante" = "Alumno"."ID_Estudiante" JOIN "Curso" ON "Curso"."ID_Curso" = "Alumno"."ID_Curso" WHERE "Estudiante".EMAIL = \'{str(user.email)}\' AND "Alumno"."ID_Periodo" = \'{str(request.args.get("periodo",""))}\'')
+                return render_template("cursos.html", rol='Estudiante',cursos=cur.fetchall(), periodos= periodos,base_template=appbuilder.base_template, appbuilder=appbuilder)
             elif 'Docente' in roles:
                 cur.execute(f'SELECT "Curso"."ID_Curso", "Curso".NOMBRE FROM "Docente" JOIN "Curso" ON "Curso"."ID_Docente" = "Docente"."ID_Docente" WHERE "Docente".EMAIL = \'{str(user.email)}\';')
                 
-                return render_template("cursos.html", rol='Docente',cursos=cur.fetchall(), base_template=appbuilder.base_template, appbuilder=appbuilder)
+                return render_template("cursos.html", rol='Docente',cursos=cur.fetchall(),periodos=periodos ,base_template=appbuilder.base_template, appbuilder=appbuilder)
             elif 'Admin' in roles:
-                return render_template("cursos.html", rol='Admin', base_template=appbuilder.base_template, appbuilder=appbuilder)
+                return render_template("cursos.html", rol='Admin', periodos = periodos,base_template=appbuilder.base_template, appbuilder=appbuilder)
 
 logging.basicConfig(format="%(asctime)s:%(levelname)s:%(name)s:%(message)s")
 logging.getLogger().setLevel(logging.DEBUG)

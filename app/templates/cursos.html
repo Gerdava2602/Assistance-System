@@ -3,21 +3,38 @@
 <div class="jumbotron">
   <div class="container">
     <h1>Bienvenido, {{rol}}</h1>
-    {% if cursos|length > 0 %}
-    <ul>
-      {% for cur in cursos%}
-        <li>
-          <h4>Curso {{cur[1]}}</h4>
-          <form action="/curso" method='get'>
-            <input type="hidden" name="id" value={{cur[0]}}>
-            <input type="submit" value="submit">
-          </form>
-        </li>
-      {% endfor %}
-    </ul>
-    {% else %}
-        <p>Parece que no tiene cursos asociados</p>
-    {%endif%}
+    
+    {% if rol != 'Admin'%}
+      {% if rol == 'Estudiante'%}
+        <form action="/" method='get'>
+          <label for="periodos">Periodo</label>
+          <select name="periodo" id="periodos">
+            {% for p in periodos %}
+            <option value="{{p}}">{{p}}</option>
+            {% endfor %}
+          </select>
+          <input type="submit" value="escoger">
+        </form>
+      {% endif %}
+      {% if cursos|length > 0 %}
+      <ul>
+        {% for cur in cursos%}
+          <div>
+            <li>
+              <h4>Curso {{cur[1]}}</h4>
+              <form action="/curso" method='get'>
+                <input type="hidden" name="id" value={{cur[0]}}>
+                <input type="submit" value="submit">
+              </form>
+            </li>
+          </div>
+        {% endfor %}
+      </ul>
+      {% else %}
+          <p>Parece que no tiene cursos asociados en este periodo</p>
+      {%endif%}
+    {% endif %}
   </div>
 </div>
+
 {% endblock %}

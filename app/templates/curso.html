@@ -9,7 +9,7 @@
     <ul>
       {% for cur in sesiones%}
         <li>
-          <h4>ID Sesión{{cur[-2]}}</h4>
+          <h4>ID Sesión {{cur[-2]}}</h4>
           <p>Hora inicio: {{cur[0]}}</p>
           <p>Hora Fin: {{cur[1]}}</p>
           <p>Fecha: {{cur[2]}}</p>
@@ -18,7 +18,7 @@
             <input type="hidden" name="id_curso" value={{id}}>
             <input type="submit" value="Entrar">
           </form>
-          {% if 'Docente' in roles %}
+          {% if 'Docente' in roles and cur[-1] == 0%}
             <form action="/activate" method='get'>
               <input type="hidden" name="id" value={{cur[-2]}}>
               <input type="hidden" name="id_curso" value={{id}}>
