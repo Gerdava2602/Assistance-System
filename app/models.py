@@ -141,6 +141,8 @@ class Sesion(Model):
     ID_Horario = Column(Integer, ForeignKey("Horario.ID_Horario"), nullable=False)
     Horario = relationship("Horario")
     activada = Column(Boolean)
+    hora_activacion = Column(DateTime)
+    codigo_base = Column(String(60))
 
     def __str__(self):
         return str(self.ID_Sesion)

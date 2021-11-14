@@ -19,6 +19,10 @@ class DepartamentoView(ModelView):
     datamodel = SQLAInterface(Departamento)
     add_columns=['ID_Departamento','nombre']
 
+class AsistenciaView(ModelView):
+    datamodel = SQLAInterface(Asistencia)
+    add_columns=['ID_Sesion','Sesion','Estudiante','estado']
+
 class DocenteView(ModelView):
     datamodel = SQLAInterface(Docente)
     add_columns=['ID_Docente','nombre','apellido','email', 'Departamento']
@@ -65,7 +69,7 @@ class SalonView(ModelView):
 
 class SesionView(ModelView):
     datamodel = SQLAInterface(Sesion)
-    add_columns=['ID_Sesion','Curso','Salon','Horario','activada']
+    add_columns=['ID_Sesion','Curso','Salon','Horario','activada','hora_activacion','codigo_base']
 
 class HorarioView(ModelView):
     datamodel = SQLAInterface(Horario)
@@ -117,6 +121,9 @@ appbuilder.add_view(
 appbuilder.add_view(
     HorarioView, "Horarios", icon="fa-folder-open-o", category="Universidad"
 )
+appbuilder.add_view(
+    AsistenciaView, "Asistencias", icon="fa-folder-open-o", category="Universidad"
+)
 
 @app.route("/curso")
 def curso():
@@ -135,11 +142,44 @@ def activate():
     con = fdb.connect(database='C:/Users/germa/Desktop/Universidad/2021-3/Bases de datos/final/project/DB.FDB', user='sysdba', password='masterkey')
     cur = con.cursor()
     #Update info
-    cur.execute(f'UPDATE "Sesion" SET ACTIVADA = 1 WHERE "ID_Sesion" = {request.args.get("id")};')
-
-    #Ask for all the sessions
-    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
     user = g.user
     roles = [str(i) for i in user.roles]
-    return render_template("curso.html", id = request.args.get("id_curso"), roles = roles,sesiones=cur.fetchall(),base_template=appbuilder.base_template, appbuilder=appbuilder)
-    
+    cur.execute(f'SELECT "ID_Docente" FROM "Docente" WHERE "Docente".EMAIL = \'{str(user.email)}\'')
+    cod = str(request.args.get("id_curso"))+str(cur.fetchone()[0])
+    cur.execute(f'UPDATE "Sesion" SET ACTIVADA = 1,"HORA_ACTIVACION" = CURRENT_TIME, "CODIGO_BASE" = \'{cod}\' WHERE "ID_Sesion" = {request.args.get("id")};')
+    #Ask for all the sessions
+    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id_curso")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
+    sesiones = cur.fetchall()
+
+    con.commit()
+    return render_template("curso.html", id = request.args.get("id_curso"),base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
+
+@app.route('/asistencia')
+def asistencia():
+    con = fdb.connect(database='C:/Users/germa/Desktop/Universidad/2021-3/Bases de datos/final/project/DB.FDB', user='sysdba', password='masterkey')
+    cur = con.cursor()
+    user = g.user
+    roles = [str(i) for i in user.roles]
+    cur.execute(f'SELECT "ID_Estudiante" FROM "Estudiante" WHERE "Estudiante".EMAIL = \'{str(user.email)}\'')
+    cod_estudiante = cur.fetchone()[0]
+    cur.execute(f'SELECT "CODIGO_BASE" FROM "Sesion" WHERE "ID_Sesion" = {request.args.get("id")};')
+    cod = cur.fetchone()[0]
+    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id_curso")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
+    sesiones = cur.fetchall()
+    if str(request.args.get('codigo')) == str(cod)+str(cod_estudiante):
+        cur.execute(f'SELECT "HORA_ACTIVACION" FROM "Sesion" WHERE "ID_Sesion" = {request.args.get("id")}')
+        delta = datetime.datetime.now() - cur.fetchone()[0]
+        if delta < datetime.timedelta(minutes=10):
+            estado = 'Asistencia'
+        elif delta <= datetime.timedelta(minutes=20):
+            estado = 'Retraso'
+        else:
+            estado = 'Ausencia'
+        try:
+            cur.execute(f'INSERT INTO "Asistencia" ("ID_Sesion","ID_Estudiante","ESTADO") values (\'{request.args.get("id")}\',\'{cod_estudiante}\',\'{estado}\')')
+        except:
+            return render_template("curso.html", aviso = 'Su asistencia ya ha sido tomada',id = request.args.get("id_curso"),base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
+        con.commit()
+        return render_template("curso.html", aviso = 'Asistencia tomada',id = request.args.get("id_curso"),base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
+    else:
+        return render_template("curso.html", id = request.args.get("id_curso"),aviso = 'Clave incorrecta',base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
