@@ -7,6 +7,9 @@ from flask_appbuilder import BaseView,IndexView, expose
 from flask import Flask, g, request
 import fdb
 import os
+import threading
+import time
+import datetime
 """
  Logging configuration
 """
@@ -39,9 +42,35 @@ class newIndexView(IndexView):
             elif 'Admin' in roles:
                 return render_template("cursos.html", rol='Admin', periodos = periodos,base_template=appbuilder.base_template, appbuilder=appbuilder)
 
+#Thread to check sessions
+def checker_thread():
+    while True:
+        #Connects to the database
+        con = fdb.connect(database='C:/Users/germa/Desktop/Universidad/2021-3/Bases de datos/final/project/DB.FDB', user='sysdba', password='masterkey')
+        cur = con.cursor()
+
+        #Gets the sessions of the date for each course
+        cur.execute('SELECT "Curso"."ID_Curso","Sesion"."ID_Sesion","Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA,"Sesion"."CODIGO_BASE","Sesion"."HORA_ACTIVACION" FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE CURRENT_DATE<="Horario"."Hora_Fin"')
+        sessions = cur.fetchall()
+        for session in sessions:
+            #Check if the session has an 'Asistencia'
+            if session[-3] == 1:
+                if (datetime.datetime.now() - session[-1]) > datetime.timedelta(minutes=20): 
+                    cur.execute(f'SELECT "Estudiante"."ID_Estudiante" FROM "Estudiante" JOIN "Alumno" ON "Estudiante"."ID_Estudiante" = "Alumno"."ID_Estudiante" JOIN "Curso" ON "Curso"."ID_Curso" = "Alumno"."ID_Curso" WHERE "Curso"."ID_Curso" = {session[0]}')
+                    estudiantes = cur.fetchall()
+                    cur.execute(f'SELECT "ID_Estudiante" FROM "Asistencia" WHERE "ID_Sesion" = {session[1]}')
+                    already = cur.fetchall()
+                    for estudiante in estudiantes:
+                        if not estudiante[0] in [i[0] for i in already]:
+                            cur.execute(f'INSERT INTO "Asistencia" VALUES ({session[1]},{estudiante[0]},\'Ausencia\')')
+                            con.commit()
+        time.sleep(5)
+
 logging.basicConfig(format="%(asctime)s:%(levelname)s:%(name)s:%(message)s")
 logging.getLogger().setLevel(logging.DEBUG)
 
+checker = threading.Thread(target=checker_thread)
+checker.start()
 app = Flask(__name__)
 app.config.from_object("config")
 db = SQLA(app)

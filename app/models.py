@@ -151,7 +151,7 @@ class Asistencia(Model):
     __tablename__ = 'Asistencia'
     ID_Sesion = Column(Integer, ForeignKey("Sesion.ID_Sesion"), nullable=False, primary_key=True)
     Sesion = relationship("Sesion")
-    ID_Estudiante = Column(Integer, ForeignKey("Estudiante.ID_Estudiante"), nullable=False)
+    ID_Estudiante = Column(Integer, ForeignKey("Estudiante.ID_Estudiante"), nullable=False, primary_key=True)
     Estudiante = relationship("Estudiante")
     estado = Column(String(60), nullable=False)
 

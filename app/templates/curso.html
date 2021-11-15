@@ -9,27 +9,28 @@
     <ul>
       {% for cur in sesiones%}
         <li>
-          <h4>ID Sesión {{cur[-2]}}</h4>
+          <h4>ID Sesión {{cur[-3]}}</h4>
           <p>Hora inicio: {{cur[0]}}</p>
           <p>Hora Fin: {{cur[1]}}</p>
           <p>Fecha: {{cur[2]}}</p>
-          {% if 'Docente' in roles and cur[-1] == 0%}
+          {% if 'Docente' in roles and cur[-2] == 0%}
             <form action="/activate" method='get'>
-              <input type="hidden" name="id" value={{cur[-2]}}>
+              <input type="hidden" name="id" value={{cur[-3]}}>
               <input type="hidden" name="id_curso" value={{id}}>
               <input type="submit" value="Activar">
             </form>
           {% endif %}
-          {% if 'Estudiante' in roles and cur[-1] == 1%}
+          {% if 'Estudiante' in roles and cur[-2] == 1%}
             <form action="/asistencia" method='get'>
-              <input type="hidden" name="id" value={{cur[-2]}}>
+              <input type="hidden" name="id" value={{cur[-3]}}>
               <input type="hidden" name="id_curso" value={{id}}>
               <input type="text" name="codigo" id="codigo">
               <input type="submit" value="Entrar">
             </form>
           {% endif %}
-          {% if cur[-1] == 1 %}
+          {% if cur[-2] == 1 %}
             <p>En curso</p>
+            <p>Código {{cur[-1]}}</p>
             <p>{{aviso}}</p>
           {%endif%}
         </li>

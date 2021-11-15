@@ -12,8 +12,7 @@ from flask import g
 from flask_appbuilder import BaseView,IndexView, expose
 import fdb
 import datetime
-import qrcode
-from PIL import Image
+from cryptography.fernet import Fernet
 
 class DepartamentoView(ModelView):
     datamodel = SQLAInterface(Departamento)
@@ -130,22 +129,31 @@ def curso():
     #SQL STATEMENT
     con = fdb.connect(database='C:/Users/germa/Desktop/Universidad/2021-3/Bases de datos/final/project/DB.FDB', user='sysdba', password='masterkey')
     cur = con.cursor()
-    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
+
+    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA,"Sesion"."CODIGO_BASE" FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
     #User Role
     user = g.user
     roles = [str(i) for i in user.roles]
 
-    return render_template("curso.html", id = request.args.get("id"), roles = roles,sesiones=cur.fetchall(),base_template=appbuilder.base_template, appbuilder=appbuilder)
+
+    return render_template("curso.html" ,id = request.args.get("id"), roles = roles,sesiones=cur.fetchall(),base_template=appbuilder.base_template, appbuilder=appbuilder)
 
 @app.route("/activate")
 def activate():
+    #Connecting to the database
     con = fdb.connect(database='C:/Users/germa/Desktop/Universidad/2021-3/Bases de datos/final/project/DB.FDB', user='sysdba', password='masterkey')
     cur = con.cursor()
-    #Update info
+    #Gets the user and his roles
     user = g.user
     roles = [str(i) for i in user.roles]
+    #Fetch the ID from a 'Docente'
     cur.execute(f'SELECT "ID_Docente" FROM "Docente" WHERE "Docente".EMAIL = \'{str(user.email)}\'')
+    #Key to encrypt the message
+    key = Fernet.generate_key()
+    fernet = Fernet(key)
+    #Joining the IDs to create a single key
     cod = str(request.args.get("id_curso"))+str(cur.fetchone()[0])
+    cod = str(fernet.encrypt(cod.encode()))[-10:-5]
     cur.execute(f'UPDATE "Sesion" SET ACTIVADA = 1,"HORA_ACTIVACION" = CURRENT_TIME, "CODIGO_BASE" = \'{cod}\' WHERE "ID_Sesion" = {request.args.get("id")};')
     #Ask for all the sessions
     cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id_curso")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
@@ -164,7 +172,7 @@ def asistencia():
     cod_estudiante = cur.fetchone()[0]
     cur.execute(f'SELECT "CODIGO_BASE" FROM "Sesion" WHERE "ID_Sesion" = {request.args.get("id")};')
     cod = cur.fetchone()[0]
-    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id_curso")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
+    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA,"Sesion"."CODIGO_BASE" FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id_curso")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
     sesiones = cur.fetchall()
     if str(request.args.get('codigo')) == str(cod)+str(cod_estudiante):
         cur.execute(f'SELECT "HORA_ACTIVACION" FROM "Sesion" WHERE "ID_Sesion" = {request.args.get("id")}')
@@ -178,7 +186,7 @@ def asistencia():
         try:
             cur.execute(f'INSERT INTO "Asistencia" ("ID_Sesion","ID_Estudiante","ESTADO") values (\'{request.args.get("id")}\',\'{cod_estudiante}\',\'{estado}\')')
         except:
-            return render_template("curso.html", aviso = 'Su asistencia ya ha sido tomada',id = request.args.get("id_curso"),base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
+            return render_template("curso.html", aviso = 'Su asistencia ya ha sido tomada anteriormente',id = request.args.get("id_curso"),base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
         con.commit()
         return render_template("curso.html", aviso = 'Asistencia tomada',id = request.args.get("id_curso"),base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
     else:
