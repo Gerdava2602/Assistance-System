@@ -19,6 +19,7 @@
               <input type="hidden" name="id_curso" value={{id}}>
               <input type="submit" value="Activar">
             </form>
+            <p>{{aviso}}</p>
           {% endif %}
           {% if 'Estudiante' in roles and cur[-2] == 1%}
             <form action="/asistencia" method='get'>

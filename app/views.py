@@ -56,11 +56,11 @@ class MatriculaView(ModelView):
 
 class CursoView(ModelView):
     datamodel = SQLAInterface(Curso)
-    add_columns=['ID_Curso','nombre','Docente','Asignatura']
+    add_columns=['ID_Curso','nombre','Docente','Asignatura','Periodo']
 
 class AlumnoView(ModelView):
     datamodel = SQLAInterface(Alumno)
-    add_columns=['Estudiante','Periodo','Curso']
+    add_columns=['Estudiante','Curso']
 
 class SalonView(ModelView):
     datamodel = SQLAInterface(Salon)
@@ -151,16 +151,22 @@ def activate():
     #Key to encrypt the message
     key = Fernet.generate_key()
     fernet = Fernet(key)
+    #Advice if there are any problems
+    aviso = ''
     #Joining the IDs to create a single key
     cod = str(request.args.get("id_curso"))+str(cur.fetchone()[0])
     cod = str(fernet.encrypt(cod.encode()))[-10:-5]
-    cur.execute(f'UPDATE "Sesion" SET ACTIVADA = 1,"HORA_ACTIVACION" = CURRENT_TIME, "CODIGO_BASE" = \'{cod}\' WHERE "ID_Sesion" = {request.args.get("id")};')
+    cur.execute(f'SELECT "Horario"."Hora_Inicio" FROM "Sesion" JOIN "Horario" ON "Sesion"."ID_Horario" = "Horario"."ID_Horario" WHERE "Sesion"."ID_Sesion" = {request.args.get("id")}')
+    if (datetime.datetime.now() - cur.fetchone()[0]) < datetime.timedelta(minutes=0):
+        cur.execute(f'UPDATE "Sesion" SET ACTIVADA = 1,"HORA_ACTIVACION" = CURRENT_TIME, "CODIGO_BASE" = \'{cod}\' WHERE "ID_Sesion" = {request.args.get("id")};')
+    else:
+        aviso = 'Para activar la sesión, se necesita que sea la hora acordada'
     #Ask for all the sessions
     cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id_curso")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
     sesiones = cur.fetchall()
 
     con.commit()
-    return render_template("curso.html", id = request.args.get("id_curso"),base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
+    return render_template("curso.html", id = request.args.get("id_curso"),aviso = aviso,base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
 
 @app.route('/asistencia')
 def asistencia():

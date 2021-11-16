@@ -5,7 +5,6 @@
     <h1>Bienvenido, {{rol}}</h1>
     
     {% if rol != 'Admin'%}
-      {% if rol == 'Estudiante'%}
         <form action="/" method='get'>
           <label for="periodos">Periodo</label>
           <select name="periodo" id="periodos">
@@ -15,7 +14,6 @@
           </select>
           <input type="submit" value="escoger">
         </form>
-      {% endif %}
       {% if cursos|length > 0 %}
       <ul>
         {% for cur in cursos%}

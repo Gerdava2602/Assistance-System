@@ -33,11 +33,12 @@ class newIndexView(IndexView):
             if 'Estudiante' in roles:
                 cur.execute(f'SELECT "Curso"."ID_Curso","Curso".NOMBRE FROM "Estudiante" JOIN "Alumno" ON "Estudiante"."ID_Estudiante" = "Alumno"."ID_Estudiante" JOIN "Curso" ON "Curso"."ID_Curso" = "Alumno"."ID_Curso" WHERE "Estudiante".EMAIL = \'{str(user.email)}\'')
                 if request.args.get("periodo","") != "":
-                    cur.execute(f'SELECT "Curso"."ID_Curso","Curso".NOMBRE FROM "Estudiante" JOIN "Alumno" ON "Estudiante"."ID_Estudiante" = "Alumno"."ID_Estudiante" JOIN "Curso" ON "Curso"."ID_Curso" = "Alumno"."ID_Curso" WHERE "Estudiante".EMAIL = \'{str(user.email)}\' AND "Alumno"."ID_Periodo" = \'{str(request.args.get("periodo",""))}\'')
+                    cur.execute(f'SELECT "Curso"."ID_Curso","Curso".NOMBRE FROM "Estudiante" JOIN "Alumno" ON "Estudiante"."ID_Estudiante" = "Alumno"."ID_Estudiante" JOIN "Curso" ON "Curso"."ID_Curso" = "Alumno"."ID_Curso" WHERE "Estudiante".EMAIL = \'{str(user.email)}\' AND "Curso"."ID_Periodo" = \'{str(request.args.get("periodo",""))}\'')
                 return render_template("cursos.html", rol='Estudiante',cursos=cur.fetchall(), periodos= periodos,base_template=appbuilder.base_template, appbuilder=appbuilder)
             elif 'Docente' in roles:
                 cur.execute(f'SELECT "Curso"."ID_Curso", "Curso".NOMBRE FROM "Docente" JOIN "Curso" ON "Curso"."ID_Docente" = "Docente"."ID_Docente" WHERE "Docente".EMAIL = \'{str(user.email)}\';')
-                
+                if request.args.get("periodo","") != "":
+                    cur.execute(f'SELECT "Curso"."ID_Curso", "Curso".NOMBRE FROM "Docente" JOIN "Curso" ON "Curso"."ID_Docente" = "Docente"."ID_Docente" WHERE "Docente".EMAIL = \'{str(user.email)}\' AND "Curso"."ID_Periodo" = \'{str(request.args.get("periodo",""))}\';')
                 return render_template("cursos.html", rol='Docente',cursos=cur.fetchall(),periodos=periodos ,base_template=appbuilder.base_template, appbuilder=appbuilder)
             elif 'Admin' in roles:
                 return render_template("cursos.html", rol='Admin', periodos = periodos,base_template=appbuilder.base_template, appbuilder=appbuilder)

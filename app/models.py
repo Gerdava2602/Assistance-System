@@ -97,7 +97,10 @@ class Curso(Model):
     Docente = relationship("Docente")
     ID_Asignatura = Column(Integer, ForeignKey("Asignatura.ID_Asignatura"), nullable=False)
     Asignatura = relationship("Asignatura")
+    ID_Periodo = Column(String(8), ForeignKey("Periodo.ID_Periodo"), nullable=False)
+    Periodo = relationship("Periodo")
     ID_Curso = Column(Integer, nullable=False, primary_key=True)
+
 
     def __str__(self):
         return self.nombre
@@ -107,8 +110,6 @@ class Alumno(Model):
     __tablename__ = 'Alumno'
     ID_Estudiante = Column(Integer, ForeignKey("Estudiante.ID_Estudiante"), nullable=False, primary_key=True)
     Estudiante = relationship("Estudiante")
-    ID_Periodo = Column(String(8), ForeignKey("Periodo.ID_Periodo"), nullable=False, primary_key=True)
-    Periodo = relationship("Periodo")
     ID_Curso = Column(Integer, ForeignKey("Curso.ID_Curso"), nullable=False, primary_key=True)
     Curso = relationship("Curso")
 
