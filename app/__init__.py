@@ -71,6 +71,7 @@ logging.basicConfig(format="%(asctime)s:%(levelname)s:%(name)s:%(message)s")
 logging.getLogger().setLevel(logging.DEBUG)
 
 checker = threading.Thread(target=checker_thread)
+checker.daemon = True
 checker.start()
 app = Flask(__name__)
 app.config.from_object("config")
