@@ -157,10 +157,14 @@ def activate():
     cod = str(request.args.get("id_curso"))+str(cur.fetchone()[0])
     cod = str(fernet.encrypt(cod.encode()))[-10:-5]
     cur.execute(f'SELECT "Horario"."Hora_Inicio" FROM "Sesion" JOIN "Horario" ON "Sesion"."ID_Horario" = "Horario"."ID_Horario" WHERE "Sesion"."ID_Sesion" = {request.args.get("id")}')
-    if datetime.timedelta(minutes=30) > (datetime.datetime.now() - cur.fetchone()[0]) > datetime.timedelta(minutes=0):
+    hora_inicio = cur.fetchone()[0]
+    if datetime.timedelta(minutes=30) > (datetime.datetime.now() - hora_inicio) > datetime.timedelta(minutes=0):
         cur.execute(f'UPDATE "Sesion" SET ACTIVADA = 1,"HORA_ACTIVACION" = CURRENT_TIME, "CODIGO_BASE" = \'{cod}\' WHERE "ID_Sesion" = {request.args.get("id")};')
     else:
-        aviso = 'Para activar la sesión, se necesita que sea la hora acordada'
+        if hora_inicio - datetime.datetime.now() > datetime.timedelta(minutes=0):
+            aviso = 'Para activar la sesión, se necesita que sea la hora acordada. La sesión empieza a las '+hora_inicio.strftime("%H:%M:%S")+' del '+hora_inicio.strftime("%d/%m/%Y")
+        else:
+            aviso = 'Para activar la sesión, se necesita que sea la hora acordadad. Ya han pasado más de 30 minutos'
     #Ask for all the sessions
     cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA,"Sesion"."CODIGO_BASE" FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id_curso")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
     sesiones = cur.fetchall()
@@ -194,6 +198,6 @@ def asistencia():
         except:
             return render_template("curso.html", aviso = 'Su asistencia ya ha sido tomada anteriormente',id = request.args.get("id_curso"),base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
         con.commit()
-        return render_template("curso.html", aviso = 'Asistencia tomada',id = request.args.get("id_curso"),base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
+        return render_template("curso.html", aviso = 'Asistencia tomada: su estado es '+estado,id = request.args.get("id_curso"),base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
     else:
-        return render_template("curso.html", id = request.args.get("id_curso"),aviso = 'Clave incorrecta',base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
+        return render_template("curso.html", id = request.args.get("id_curso"),aviso = 'Clave incorrecta',base = cod,roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)

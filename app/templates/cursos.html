@@ -5,7 +5,8 @@
     <h1>Bienvenido, {{rol}}</h1>
     
     {% if rol != 'Admin'%}
-        <form action="/" method='get'>
+        <label for="periodo_form"> Escoja el periodo a visualizar</label>
+        <form action="/" method='get' name='periodo_form' id='periodo_form'>
           <label for="periodos">Periodo</label>
           <select name="periodo" id="periodos">
             {% for p in periodos %}
@@ -14,6 +15,7 @@
           </select>
           <input type="submit" value="escoger">
         </form>
+      <h3>Periodo: {{actual}}</h3>
       {% if cursos|length > 0 %}
       <ul>
         {% for cur in cursos%}
