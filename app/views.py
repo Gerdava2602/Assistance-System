@@ -157,12 +157,12 @@ def activate():
     cod = str(request.args.get("id_curso"))+str(cur.fetchone()[0])
     cod = str(fernet.encrypt(cod.encode()))[-10:-5]
     cur.execute(f'SELECT "Horario"."Hora_Inicio" FROM "Sesion" JOIN "Horario" ON "Sesion"."ID_Horario" = "Horario"."ID_Horario" WHERE "Sesion"."ID_Sesion" = {request.args.get("id")}')
-    if (datetime.datetime.now() - cur.fetchone()[0]) < datetime.timedelta(minutes=0):
+    if datetime.timedelta(minutes=30) > (datetime.datetime.now() - cur.fetchone()[0]) > datetime.timedelta(minutes=0):
         cur.execute(f'UPDATE "Sesion" SET ACTIVADA = 1,"HORA_ACTIVACION" = CURRENT_TIME, "CODIGO_BASE" = \'{cod}\' WHERE "ID_Sesion" = {request.args.get("id")};')
     else:
         aviso = 'Para activar la sesión, se necesita que sea la hora acordada'
     #Ask for all the sessions
-    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id_curso")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
+    cur.execute(f'SELECT "Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA,"Sesion"."CODIGO_BASE" FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Curso"."ID_Curso" = \'{request.args.get("id_curso")}\' AND CURRENT_DATE<="Horario"."Hora_Fin"')
     sesiones = cur.fetchall()
 
     con.commit()
