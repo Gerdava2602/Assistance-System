@@ -68,7 +68,7 @@ class SalonView(ModelView):
 
 class SesionView(ModelView):
     datamodel = SQLAInterface(Sesion)
-    add_columns=['ID_Sesion','Curso','Salon','Horario','activada','hora_activacion','codigo_base']
+    add_columns=['ID_Sesion','Curso','Salon','Horario','activada','hora_activacion','codigo_base','asistencia_docente']
 
 class HorarioView(ModelView):
     datamodel = SQLAInterface(Horario)
@@ -168,18 +168,19 @@ def activate():
     roles = [str(i) for i in user.roles]
     #Fetch the ID from a 'Docente'
     cur.execute(f'SELECT "ID_Docente" FROM "Docente" WHERE "Docente".EMAIL = \'{str(user.email)}\'')
+    id_docente = cur.fetchone()[0]
     #Key to encrypt the message
     key = Fernet.generate_key()
     fernet = Fernet(key)
     #Advice if there are any problems
     aviso = ''
     #Joining the IDs to create a single key
-    cod = str(request.args.get("id_curso"))+str(cur.fetchone()[0])
+    cod = str(request.args.get("id_curso"))+str(id_docente)
     cod = str(fernet.encrypt(cod.encode()))[-10:-5]
     cur.execute(f'SELECT "Horario"."Hora_Inicio" FROM "Sesion" JOIN "Horario" ON "Sesion"."ID_Horario" = "Horario"."ID_Horario" WHERE "Sesion"."ID_Sesion" = {request.args.get("id")}')
     hora_inicio = cur.fetchone()[0]
-    if datetime.timedelta(minutes=30) > (datetime.datetime.now() - hora_inicio) > datetime.timedelta(minutes=0):
-        cur.execute(f'UPDATE "Sesion" SET ACTIVADA = 1,"HORA_ACTIVACION" = CURRENT_TIME, "CODIGO_BASE" = \'{cod}\' WHERE "ID_Sesion" = {request.args.get("id")};')
+    if datetime.timedelta(minutes=20) > (datetime.datetime.now() - hora_inicio) > datetime.timedelta(minutes=0):
+        cur.execute(f'UPDATE "Sesion" SET ACTIVADA = 1, "ASISTENCIA_DOCENTE" = 1,"HORA_ACTIVACION" = CURRENT_TIME, "CODIGO_BASE" = \'{cod}\' WHERE "ID_Sesion" = {request.args.get("id")};')
     else:
         if hora_inicio - datetime.datetime.now() > datetime.timedelta(minutes=0):
             aviso = 'Para activar la sesión, se necesita que sea la hora acordada. La sesión empieza a las '+hora_inicio.strftime("%H:%M:%S")+' del '+hora_inicio.strftime("%d/%m/%Y")
@@ -214,7 +215,9 @@ def asistencia():
         else:
             estado = 'Ausencia'
         try:
-            cur.execute(f'INSERT INTO "Asistencia" ("ID_Sesion","ID_Estudiante","ESTADO") values (\'{request.args.get("id")}\',\'{cod_estudiante}\',\'{estado}\')')
+            cur.execute(f'SELECT "ID_Docente" FROM "Curso" WHERE "Curso"."ID_Curso" = {request.args.get("id_curso")}')
+            id_docente = cur.fetchone()[0]
+            cur.execute(f'INSERT INTO "Asistencia" ("ID_Sesion","ID_Estudiante","ESTADO","ID_Docente") values (\'{request.args.get("id")}\',\'{cod_estudiante}\',\'{estado}\', {id_docente})')
         except:
             return render_template("curso.html", aviso = 'Su asistencia ya ha sido tomada anteriormente',id = request.args.get("id_curso"),base = cod, roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
         con.commit()

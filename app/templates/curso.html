@@ -6,6 +6,7 @@
     <h1>Curso {{id}}</h1>
   </div>
   {% if sesiones|length > 0 %}
+    <p>{{aviso}}</p>
     <ul>
       {% for cur in sesiones%}
         <li>
@@ -32,7 +33,6 @@
           {% if cur[-2] == 1 %}
             <p>En curso</p>
             <p>Código {{cur[-1]}}</p>
-            <p>{{aviso}}</p>
           {%endif%}
         </li>
       {% endfor %}

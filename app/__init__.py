@@ -54,6 +54,7 @@ def checker_thread():
         cur.execute('SELECT "Curso"."ID_Curso","Sesion"."ID_Sesion","Horario"."Hora_Inicio","Horario"."Hora_Fin","Horario".FECHA,"ID_Sesion",ACTIVADA,"Sesion"."CODIGO_BASE","Sesion"."HORA_ACTIVACION" FROM "Curso" JOIN "Sesion" ON "Curso"."ID_Curso" = "Sesion"."ID_Curso" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE CURRENT_DATE<="Horario"."Hora_Fin"')
         sessions = cur.fetchall()
         for session in sessions:
+
             #Check if the session has an 'Asistencia'
             if session[-3] == 1:
                 if (datetime.datetime.now() - session[-1]) > datetime.timedelta(minutes=20): 
@@ -63,7 +64,9 @@ def checker_thread():
                     already = cur.fetchall()
                     for estudiante in estudiantes:
                         if not estudiante[0] in [i[0] for i in already]:
-                            cur.execute(f'INSERT INTO "Asistencia" VALUES ({session[1]},{estudiante[0]},\'Ausencia\')')
+                            cur.execute(f'SELECT "ID_Docente" FROM "Curso" WHERE "Curso"."ID_Curso" = {session[0]}')
+                            docente = cur.fetchone()[0]
+                            cur.execute(f'INSERT INTO "Asistencia" VALUES ({session[1]},{estudiante[0]},\'Ausencia\',{docente})')
                             con.commit()
         time.sleep(5)
 

@@ -144,7 +144,8 @@ class Sesion(Model):
     activada = Column(Boolean)
     hora_activacion = Column(DateTime)
     codigo_base = Column(String(60))
-
+    asistencia_docente = Column(Boolean)
+    
     def __str__(self):
         return str(self.ID_Sesion)
 
@@ -155,6 +156,8 @@ class Asistencia(Model):
     ID_Estudiante = Column(Integer, ForeignKey("Estudiante.ID_Estudiante"), nullable=False, primary_key=True)
     Estudiante = relationship("Estudiante")
     estado = Column(String(60), nullable=False)
+    ID_Docente = Column(Integer, ForeignKey("Docente.ID_Docente"), nullable=False)
+    Docente = relationship("Docente")
 
     def __str__(self):
         return str(self.ID_Sesion)
