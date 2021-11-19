@@ -138,6 +138,26 @@ def curso():
 
     return render_template("curso.html" ,id = request.args.get("id"), roles = roles,sesiones=cur.fetchall(),base_template=appbuilder.base_template, appbuilder=appbuilder)
 
+@app.route("/asistencias")
+def asist():
+    con = fdb.connect(database='C:/Users/germa/Desktop/Universidad/2021-3/Bases de datos/final/project/DB.FDB', user='sysdba', password='masterkey')
+    cur = con.cursor()
+
+    user = g.user
+    cur.execute(f'SELECT "ID_Estudiante" FROM "Estudiante" WHERE "Estudiante".EMAIL = \'{str(user.email)}\'')
+    id_estudiante = cur.fetchone()[0]
+    cur.execute(f'SELECT "Curso"."ID_Curso","Curso".NOMBRE FROM "Estudiante" JOIN "Alumno" ON "Estudiante"."ID_Estudiante" = "Alumno"."ID_Estudiante" JOIN "Curso" ON "Curso"."ID_Curso" = "Alumno"."ID_Curso" WHERE "Estudiante"."ID_Estudiante" = {id_estudiante}')
+    if request.args.get("periodo","") != "":
+        cur.execute(f'SELECT "Curso"."ID_Curso","Curso".NOMBRE FROM "Estudiante" JOIN "Alumno" ON "Estudiante"."ID_Estudiante" = "Alumno"."ID_Estudiante" JOIN "Curso" ON "Curso"."ID_Curso" = "Alumno"."ID_Curso" WHERE "Estudiante"."ID_Estudiante" = {id_estudiante} AND "Curso"."ID_Periodo" = \'{str(request.args.get("periodo",""))}\'')
+    cursos = cur.fetchall()
+    asistencias = {}
+    for curso in cursos:
+        cur.execute(f'SELECT "Asistencia"."ID_Sesion", "Sesion"."HORA_ACTIVACION", "Horario"."FECHA","Horario"."Hora_Inicio","Asistencia"."ESTADO" FROM "Asistencia" JOIN "Estudiante" ON "Estudiante"."ID_Estudiante" = "Asistencia"."ID_Estudiante" JOIN "Sesion" ON "Sesion"."ID_Sesion" = "Asistencia"."ID_Sesion" JOIN "Horario" ON "Horario"."ID_Horario" = "Sesion"."ID_Horario" WHERE "Estudiante"."ID_Estudiante" = {id_estudiante} AND "Sesion"."ID_Curso" = {curso[0]}')
+        asistencias[curso[0]] = cur.fetchall()
+    cur.execute('SELECT "ID_Periodo" FROM "Periodo"')
+    periodos = cur.fetchall()
+    return render_template("asistencias.html", appbuilder=appbuilder,periodo=request.args.get("periodo","Todos"),periodos = periodos, asistencias = asistencias, cursos = cursos)
+
 @app.route("/activate")
 def activate():
     #Connecting to the database

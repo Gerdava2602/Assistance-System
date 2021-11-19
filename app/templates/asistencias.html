@@ -1,0 +1,40 @@
+{% extends "appbuilder/baselayout.html" %}
+{% block content %}
+    <a href="/">Back</a>
+    <h1>Asistencias</h1>
+    <label for="periodo_form"> Escoja el periodo a visualizar</label>
+    <form action="/asistencias" method='get' name='periodo_form' id='periodo_form'>
+        <label for="periodos">Periodo</label>
+        <select name="periodo" id="periodos">
+        {% for p in periodos %}
+        <option value="{{p[0]}}">{{p[0]}}</option>
+        {% endfor %}
+        </select>
+        <input type="submit" value="escoger">
+    </form>
+    
+    <h2>Perido: {{periodo}}</h2>
+
+    {% for curso in cursos %}
+        <h3>{{curso[1]}}</h3>
+        <table id={{curso[0]}}>
+            <tr>
+                <th>ID_Sesion</th>
+                <th>hora activación</th>
+                <th>Fecha</th>
+                <th>Hora inicio</th>
+                <th>Estado</th>
+            </tr>
+        {% for asistencia in asistencias[curso[0]] %}
+            <tr>
+                <td>{{asistencia[0]}}</td>
+                <td>{{asistencia[1]}}</td>
+                <td>{{asistencia[2]}}</td>
+                <td>{{asistencia[3]}}</td>
+                <td>{{asistencia[4]}}</td>
+            </tr>
+        {% endfor %}
+    </table>
+    {% endfor %}
+
+{% endblock %}
