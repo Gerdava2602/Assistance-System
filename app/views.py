@@ -134,9 +134,14 @@ def curso():
     #User Role
     user = g.user
     roles = [str(i) for i in user.roles]
+    sesiones = cur.fetchall()
+    asistencias = {}
+    if 'Docente' in roles:
+        for sesion in sesiones:
+            cur.execute(f'SELECT "Estudiante"."ID_Estudiante",EMAIL, Nombre, Apellido,Estado FROM "Asistencia" JOIN "Estudiante" ON "Asistencia"."ID_Estudiante" = "Estudiante"."ID_Estudiante" WHERE "Asistencia"."ID_Sesion" = {sesion[3]}')
+            asistencias[sesion[3]] = cur.fetchall()
 
-
-    return render_template("curso.html" ,id = request.args.get("id"), roles = roles,sesiones=cur.fetchall(),base_template=appbuilder.base_template, appbuilder=appbuilder)
+    return render_template("curso.html" ,id = request.args.get("id"), asistencias = asistencias,roles = roles,sesiones=sesiones,base_template=appbuilder.base_template, appbuilder=appbuilder)
 
 @app.route("/asistencias")
 def asist():
